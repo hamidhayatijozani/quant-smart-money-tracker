@@ -2,164 +2,151 @@
 
 **معماری جامع سیستم ردیابی، تحلیل رفتار و تولید سیگنال‌های کمّی تریدرهای برتر در صرافی‌های بین‌المللی**
 
-طراحی و پیاده‌سازی یک سیستم صنعتی ردیابی و تحلیل رفتار تریدرهای برتر (Smart Money / Lead Traders) در صرافی‌های رمزارزی مانند Binance، OKX و Bybit.
-
-این مخزن شامل معماری دقیق فنی، محاسبات ریاضی PnL/ROI، الگوریتم‌های کمّی کشف سیگنال، سازوکارهای ایمنی و **افزوده‌های خلاقانه نسل بعدی** است.
+سیستم صنعتی برای ردیابی و تحلیل رفتار تریدرهای برتر (Smart Money / Lead Traders) در صرافی‌های Binance، OKX و Bybit همراه با تولید سیگنال کمّی، موتور هوش مصنوعی رفتارشناس و لایه‌های ایمنی پیشرفته.
 
 ---
 
-## ۱. معماری کلان سیستم و استراتژی جمع‌آوری داده‌های زنده
+## وضعیت فعلی پروژه (Current Status)
 
-سیستم جمع‌آوری داده‌های زنده باید توانایی استخراج، نرمال‌سازی و تزریق داده‌های پوزیشن، اردر و عملکرد تریدرهای برتر را از صرافی‌های مختلف داشته باشد.
-
-با توجه به محدودیت‌های Rate Limit و عدم پشتیبانی یکسان صرافی‌ها از WebSocket عمومی برای داده‌های لیدربورد، سیستم از معماری ترکیبی **REST Polling + WebSocket User Data Stream** بهره می‌برد.
-
-### جریان داده:
-1. **Dynamic Leaderboard Discovery Engine** به‌طور پیوسته حساب‌های برتر را بر اساس شاخص‌های سودآوری پایش می‌کند.
-2. داده‌ها از دو مسیر وارد می‌شوند:
-   - صف‌های استعلام متناوب HTTP REST (آمار دوره‌ای و اطلاعات پروژه‌ای)
-   - استخر جریان‌های WebSocket (تغییرات لحظه‌ای پوزیشن و قیمت)
-3. داده‌ها وارد **Stream Normalizer** می‌شوند.
-4. پس از یکسان‌سازی، روی **Event Bus مبتنی بر Apache Kafka** منتشر می‌گردند.
-5. در نهایت در پایگاه داده سری زمانی **ClickHouse** ذخیره می‌شوند.
-
-### استراتژی استخراج از صرافی‌های مرجع
-
-#### Binance
-- فراخوانی REST API برای لیست تریدرهای برتر بر اساس ROI و PnL (روزانه، هفتگی، ماهانه، کل)
-- اتصال WebSocket با احراز هویت **Ed25519** برای تأخیر بسیار پایین
-
-#### OKX
-- استفاده از API V5 برای دسترسی دقیق به پوزیشن‌های Lead Traders
-
-#### Bybit
-- پشتیبانی مشابه با ترکیب REST + WebSocket خصوصی
+| بخش                        | وضعیت          |
+|---------------------------|----------------|
+| معماری کامل               | ✅ تکمیل شده   |
+| ساختار پروژه              | ✅ ایجاد شده   |
+| Docker Compose (Kafka + ClickHouse) | ✅ آماده |
+| ماژول Safety & Idempotency | ✅ اسکلت آماده |
+| Behavioral AI Engine      | ✅ اسکلت آماده |
+| Collectors (Base)         | ✅ آماده       |
+| Configuration             | ✅ آماده       |
+| Main Entry Point          | ✅ آماده       |
+| Collectors واقعی (Binance/OKX/Bybit) | 🔄 در حال توسعه |
+| RL Agent                  | 🔄 برنامه‌ریزی شده |
+| Dashboard                 | 🔄 برنامه‌ریزی شده |
 
 ---
 
-## ۲. محاسبات ریاضی سود و زیان (PnL / ROI)
-
-فرمول‌های دقیق ریاضی اثر جریان وجوه (Deposit / Withdraw) را از محاسبات سود و زیان ایزوله می‌سازند تا عملکرد خالص معاملاتی اندازه‌گیری شود.
-
----
-
-## ۳. الگوریتم‌های کمّی کشف سیگنال بر اساس رفتار پوزیشن‌گیری (PST)
-
-الگوریتم‌های مبتنی بر تحلیل رفتار ورود و خروج پوزیشن تریدرهای برتر برای تولید سیگنال‌های قابل اجرا.
-
----
-
-## ۴. سازوکارهای ایمنی و عدم‌تکرارپذیری (Idempotency)
-
-- مدیریت حالت‌های نامشخص (Timeout → ExecutionState.UNKNOWN)
-- جلوگیری از ارسال مجدد سفارش در صورت وضعیت نامشخص
-- استفاده از Evidence Hash برای تأیید عملیات
-
----
-
-## ۵. ماتریس مجوزها و درگاه‌های تایید (Action Gates)
-
-- **EXECUTE** (اقدامات غیرمخرب مثل REFRESH): خودکار
-- **PROPOSE / ESCALATE** (باز کردن پوزیشن جدید): نیازمند تأیید انسانی یا درگاه ریسک + Runtime Evidence Hash
-
-وضعیت اجزا تنها با ثبت Evidence Reference Hash به `Maturity.VERIFIED` ارتقا می‌یابد.
-
----
-
-## ۶. نتیجه‌گیری نسخه پایه
-
-این سیستم رصد پوزیشن‌ها را از یک ابزار تجسسی ساده به یک موتور کمّی پیشرفته و خودکار تبدیل می‌کند.
-
----
-
-# افزوده‌های خلاقانه و نسل بعدی (Creative Enhancements)
-
-## ۷. موتور هوش مصنوعی رفتارشناس چندلایه (Multi-Layer Behavioral AI Engine)
-
-- **مدل Transformer سبک‌وزن** روی توالی پوزیشن‌ها، حجم و تایمینگ برای کشف الگوهای پیچیده (ورود زودهنگام، خروج پلکانی و ...)
-- **Autoencoder تشخیص ناهنجاری** برای شناسایی حساب‌های مشکوک (wash trading، پامپ مصنوعی، لیدربورد فیک)
-- **ضریب اعتماد پویا** برای هر تریدر برتر بر اساس عملکرد اخیر، ثبات رفتاری و همبستگی با بازار
-
-## ۸. لایه همگرایی داده چندمنبعی (Multi-Source Fusion Layer)
-
-ترکیب داده‌های لیدربورد با:
-- داده‌های آن‌چین (جریان وجوه بزرگ از کیف‌پول‌های شناخته‌شده)
-- احساسات شبکه‌های اجتماعی (X و تلگرام) با تأخیر زیر ۳۰ ثانیه
-- داده‌های سفارش‌بوک عمیق (Depth of Market)
-
-ساخت **Fusion Graph** برای نمایش روابط و خوشه‌های «نهنگ هماهنگ» بین تریدرهای برتر.
-
-## ۹. موتور پیش‌بینی تأثیر بازار و شبیه‌سازی ضدواقعی (Counterfactual Impact Simulator)
-
-قبل از تولید سیگنال نهایی، شبیه‌سازی تأثیر پوزیشن تریدر برتر روی قیمت و نقدینگی با استفاده از مدل‌های Order Flow Toxicity و Kyle’s Lambda.
-
-## ۱۰. سیستم یادگیری تقویتی برای بهینه‌سازی کپی‌ترید (RL Copy-Optimization Agent)
-
-عامل Reinforcement Learning که یاد می‌گیرد:
-- چه درصدی از پوزیشن را کپی کند
-- چه زمانی ورود را تأخیر دهد یا زودتر خارج شود
-- چگونه اندازه پوزیشن را بر اساس نوسان بازار تنظیم کند
-
-بازآموزی شبانه روی داده‌های ClickHouse.
-
-## ۱۱. لایه ایمنی پیشرفته و دفاعی (Advanced Safety & Adversarial Defense)
-
-- **Circuit Breaker هوشمند**: در صورت سیگنال‌های هم‌جهت بیش از حد، ورود به حالت احتیاط
-- تشخیص حمله دستکاری لیدربورد (افزایش ناگهانی فالوور یا تغییر سبک ترید)
-- **Shadow Mode**: تست ۳۰ دقیقه‌ای سیگنال‌ها قبل از اجرای واقعی
-
-## ۱۲. داشبورد تعاملی و سیستم هشدار نسل جدید
-
-- داشبورد سه‌بعدی مبتنی بر WebGL برای نمایش خوشه‌ها، جریان سرمایه و همبستگی‌ها
-- هشدارهای چندکاناله با اولویت‌بندی هوشمند (تلگرام، دیسکورد، نوتیفیکیشن صوتی)
-- گزارش روزانه خودکار با بینش‌های جدید
-
-## ۱۳. موتور بک‌تست و فورواردتست یکپارچه
-
-- بک‌تست خودکار هر الگوریتم جدید روی داده‌های تاریخی
-- معیارهای سخت‌گیرانه: Max Drawdown، Sharpe، Calmar، Profit Factor
-- پشتیبانی از Walk-Forward Optimization
-
-## ۱۴. قابلیت‌های آینده‌نگر
-
-- پشتیبانی از صرافی‌های غیرمتمرکز (DEX) و داده‌های آن‌چین پیشرفته
-- اجرای سیگنال‌ها از طریق حساب‌های چندامضایی یا کیف‌پول سخت‌افزاری
-- ماژول «تریدر مصنوعی» که رفتار تریدرهای برتر را تقلید می‌کند
-
----
-
-## ساختار پیشنهادی پروژه (آینده)
+## ساختار فعلی پروژه
 
 ```
 quant-smart-money-tracker/
-├── docs/
-│   └── architecture.md
-├── src/
-│   ├── collectors/          # Binance, OKX, Bybit collectors
-│   ├── normalizer/
-│   ├── ai_engine/           # Transformer + Autoencoder
-│   ├── fusion/
-│   ├── rl_agent/
-│   ├── safety/
-│   └── execution/
 ├── infrastructure/
-│   ├── kafka/
-│   ├── clickhouse/
-│   └── docker-compose.yml
-├── dashboards/
-└── tests/
+│   └── docker-compose.yml          # Kafka + Zookeeper + ClickHouse + Kafka-UI
+├── src/
+│   ├── __init__.py
+│   ├── main.py                     # نقطه ورود اصلی
+│   ├── config.py                   # تنظیمات با pydantic-settings
+│   ├── collectors/
+│   │   ├── __init__.py
+│   │   └── base.py                 # Abstract Collector + Position/Leaderboard models
+│   ├── ai_engine/
+│   │   ├── __init__.py
+│   │   └── behavioral.py           # Transformer + Anomaly + Trust Score
+│   └── safety/
+│       ├── __init__.py
+│       └── idempotency.py          # ExecutionState, Maturity, Evidence Hash
+├── .env.example
+├── .gitignore
+├── LICENSE
+├── requirements.txt
+└── README.md
 ```
 
 ---
 
-## منابع و الهام
+## راه‌اندازی سریع (Quick Start)
 
-- Binance Top Traders Future Positions (Apify)
-- Building StockHouse with ClickHouse
-- Monitoring Binance Futures with WebSocket
-- OKX Copy Trading documentation
+### ۱. کلون کردن مخزن
+```bash
+git clone https://github.com/hamidhayatijozani/quant-smart-money-tracker.git
+cd quant-smart-money-tracker
+```
+
+### ۲. ایجاد محیط مجازی و نصب وابستگی‌ها
+```bash
+python -m venv .venv
+source .venv/bin/activate          # Linux / macOS
+# .venv\Scripts\activate           # Windows
+
+pip install -r requirements.txt
+```
+
+### ۳. تنظیم متغیرهای محیطی
+```bash
+cp .env.example .env
+# سپس فایل .env را با کلیدهای API خود پر کنید
+```
+
+### ۴. راه‌اندازی زیرساخت (Kafka + ClickHouse)
+```bash
+cd infrastructure
+docker compose up -d
+```
+
+- Kafka UI: http://localhost:8080
+- ClickHouse: http://localhost:8123
+
+### ۵. اجرای برنامه (اسکلت فعلی)
+```bash
+python -m src.main
+```
 
 ---
 
-**ساخته‌شده با همکاری Grok و ایده‌های خلاقانه**  
-Repository: [hamidhayatijozani/quant-smart-money-tracker](https://github.com/hamidhayatijozani/quant-smart-money-tracker)
+## معماری سیستم (خلاصه)
+
+### جریان داده
+1. **Dynamic Leaderboard Discovery Engine** → پیدا کردن تریدرهای برتر
+2. REST Polling + WebSocket → جمع‌آوری پوزیشن‌ها
+3. **Stream Normalizer** → یکسان‌سازی داده
+4. **Apache Kafka** → Event Bus
+5. **ClickHouse** → ذخیره‌سازی سری زمانی با تأخیر بسیار پایین
+
+### لایه‌های پیشرفته
+- **Behavioral AI Engine**: مدل Transformer + Autoencoder برای تشخیص الگو و ناهنجاری
+- **Trust Score پویا**: وزن‌دهی هوشمند به هر تریدر برتر
+- **Idempotency + Shadow Mode**: جلوگیری از سفارش تکراری و تست ایمن سیگنال‌ها
+- **Circuit Breaker**: محافظت در برابر سیگنال‌های انبوه مشکوک
+
+---
+
+## نقشه راه (Roadmap)
+
+### فاز ۱ (فعلی) – Foundation
+- [x] معماری و مستندات
+- [x] ساختار پروژه + Docker
+- [x] Safety & Idempotency
+- [x] Behavioral AI Skeleton
+- [ ] Collectors واقعی برای Binance / OKX / Bybit
+
+### فاز ۲ – Core Engine
+- [ ] Stream Normalizer + Kafka Producer/Consumer
+- [ ] ذخیره در ClickHouse با schema بهینه
+- [ ] محاسبه دقیق PnL/ROI
+- [ ] تولید سیگنال پایه
+
+### فاز ۳ – Intelligence
+- [ ] آموزش مدل Transformer روی داده‌های واقعی
+- [ ] RL Copy-Optimization Agent
+- [ ] Multi-Source Fusion (On-chain + Sentiment)
+
+### فاز ۴ – Production Ready
+- [ ] Dashboard تعاملی
+- [ ] سیستم هشدار چندکاناله
+- [ ] Backtesting Engine
+- [ ] اجرای واقعی با Shadow Mode و Risk Gates
+
+---
+
+## مشارکت
+
+پروژه در مراحل اولیه توسعه است. پیشنهادها، Issue و Pull Request خوش‌آمد هستند.
+
+---
+
+## مجوز
+
+MIT License – آزاد برای استفاده تجاری و غیرتجاری.
+
+---
+
+**ساخته‌شده با همکاری Grok**  
+Repository: https://github.com/hamidhayatijozani/quant-smart-money-tracker
