@@ -8,19 +8,22 @@
 
 ## وضعیت فعلی پروژه (Current Status)
 
-| بخش                        | وضعیت          |
-|---------------------------|----------------|
-| معماری کامل               | ✅ تکمیل شده   |
-| ساختار پروژه              | ✅ ایجاد شده   |
-| Docker Compose (Kafka + ClickHouse) | ✅ آماده |
-| ماژول Safety & Idempotency | ✅ اسکلت آماده |
-| Behavioral AI Engine      | ✅ اسکلت آماده |
-| Collectors (Base)         | ✅ آماده       |
-| Configuration             | ✅ آماده       |
-| Main Entry Point          | ✅ آماده       |
-| Collectors واقعی (Binance/OKX/Bybit) | 🔄 در حال توسعه |
-| RL Agent                  | 🔄 برنامه‌ریزی شده |
-| Dashboard                 | 🔄 برنامه‌ریزی شده |
+| بخش                              | وضعیت              |
+|----------------------------------|--------------------|
+| معماری کامل                     | ✅ تکمیل شده       |
+| ساختار پروژه                    | ✅ ایجاد شده       |
+| Docker Compose (Kafka + ClickHouse) | ✅ آماده        |
+| ماژول Safety & Idempotency      | ✅ آماده           |
+| Behavioral AI Engine            | ✅ اسکلت آماده     |
+| Configuration                   | ✅ آماده           |
+| **Binance Collector (Leaderboard)** | ✅ پیاده‌سازی شده |
+| **ClickHouse Storage + Schema** | ✅ پیاده‌سازی شده  |
+| Main Discovery Loop             | ✅ متصل شده        |
+| Position Streaming (واقعی)      | 🔄 نیاز به منبع داده خارجی |
+| OKX / Bybit Collectors          | 🔄 بعدی            |
+| Kafka Producer/Consumer         | 🔄 بعدی            |
+| RL Agent                        | 🔄 برنامه‌ریزی شده |
+| Dashboard                       | 🔄 برنامه‌ریزی شده |
 
 ---
 
@@ -29,20 +32,24 @@
 ```
 quant-smart-money-tracker/
 ├── infrastructure/
-│   └── docker-compose.yml          # Kafka + Zookeeper + ClickHouse + Kafka-UI
+│   └── docker-compose.yml
 ├── src/
 │   ├── __init__.py
-│   ├── main.py                     # نقطه ورود اصلی
-│   ├── config.py                   # تنظیمات با pydantic-settings
+│   ├── main.py                     # Discovery loop + AI placeholder
+│   ├── config.py
 │   ├── collectors/
 │   │   ├── __init__.py
-│   │   └── base.py                 # Abstract Collector + Position/Leaderboard models
+│   │   ├── base.py
+│   │   └── binance.py              # ✅ Leaderboard + skeleton positions
+│   ├── storage/
+│   │   ├── __init__.py
+│   │   └── clickhouse.py           # ✅ Schema + insert methods
 │   ├── ai_engine/
 │   │   ├── __init__.py
-│   │   └── behavioral.py           # Transformer + Anomaly + Trust Score
+│   │   └── behavioral.py
 │   └── safety/
 │       ├── __init__.py
-│       └── idempotency.py          # ExecutionState, Maturity, Evidence Hash
+│       └── idempotency.py
 ├── .env.example
 ├── .gitignore
 ├── LICENSE
@@ -64,89 +71,69 @@ cd quant-smart-money-tracker
 ```bash
 python -m venv .venv
 source .venv/bin/activate          # Linux / macOS
-# .venv\Scripts\activate           # Windows
-
 pip install -r requirements.txt
 ```
 
 ### ۳. تنظیم متغیرهای محیطی
 ```bash
 cp .env.example .env
-# سپس فایل .env را با کلیدهای API خود پر کنید
 ```
 
-### ۴. راه‌اندازی زیرساخت (Kafka + ClickHouse)
+### ۴. راه‌اندازی زیرساخت
 ```bash
 cd infrastructure
 docker compose up -d
 ```
 
-- Kafka UI: http://localhost:8080
-- ClickHouse: http://localhost:8123
+- Kafka UI → http://localhost:8080  
+- ClickHouse → http://localhost:8123
 
-### ۵. اجرای برنامه (اسکلت فعلی)
+### ۵. اجرای سیستم
 ```bash
 python -m src.main
 ```
 
----
-
-## معماری سیستم (خلاصه)
-
-### جریان داده
-1. **Dynamic Leaderboard Discovery Engine** → پیدا کردن تریدرهای برتر
-2. REST Polling + WebSocket → جمع‌آوری پوزیشن‌ها
-3. **Stream Normalizer** → یکسان‌سازی داده
-4. **Apache Kafka** → Event Bus
-5. **ClickHouse** → ذخیره‌سازی سری زمانی با تأخیر بسیار پایین
-
-### لایه‌های پیشرفته
-- **Behavioral AI Engine**: مدل Transformer + Autoencoder برای تشخیص الگو و ناهنجاری
-- **Trust Score پویا**: وزن‌دهی هوشمند به هر تریدر برتر
-- **Idempotency + Shadow Mode**: جلوگیری از سفارش تکراری و تست ایمن سیگنال‌ها
-- **Circuit Breaker**: محافظت در برابر سیگنال‌های انبوه مشکوک
+سیستم شروع به دریافت لیدربورد بایننس (روزانه + هفتگی) می‌کند و داده‌ها را در ClickHouse ذخیره می‌نماید.
 
 ---
 
-## نقشه راه (Roadmap)
+## نقشه راه به‌روز
 
-### فاز ۱ (فعلی) – Foundation
+### فاز ۱ – Foundation ✅ تقریباً کامل
 - [x] معماری و مستندات
-- [x] ساختار پروژه + Docker
+- [x] ساختار + Docker
 - [x] Safety & Idempotency
 - [x] Behavioral AI Skeleton
-- [ ] Collectors واقعی برای Binance / OKX / Bybit
+- [x] Binance Leaderboard Collector
+- [x] ClickHouse Schema & Storage
 
-### فاز ۲ – Core Engine
-- [ ] Stream Normalizer + Kafka Producer/Consumer
-- [ ] ذخیره در ClickHouse با schema بهینه
+### فاز ۲ – Core Engine (در حال پیشرفت)
+- [x] Binance Leaderboard
+- [ ] Position data source (نیاز به منبع معتبر)
+- [ ] Kafka integration
+- [ ] OKX + Bybit collectors
 - [ ] محاسبه دقیق PnL/ROI
 - [ ] تولید سیگنال پایه
 
 ### فاز ۳ – Intelligence
-- [ ] آموزش مدل Transformer روی داده‌های واقعی
+- [ ] مدل Transformer واقعی
 - [ ] RL Copy-Optimization Agent
-- [ ] Multi-Source Fusion (On-chain + Sentiment)
+- [ ] Multi-Source Fusion
 
 ### فاز ۴ – Production Ready
-- [ ] Dashboard تعاملی
-- [ ] سیستم هشدار چندکاناله
-- [ ] Backtesting Engine
-- [ ] اجرای واقعی با Shadow Mode و Risk Gates
+- [ ] Dashboard
+- [ ] Alerting
+- [ ] Backtesting
+- [ ] Live execution with Shadow Mode
 
 ---
 
-## مشارکت
+## نکات مهم
 
-پروژه در مراحل اولیه توسعه است. پیشنهادها، Issue و Pull Request خوش‌آمد هستند.
-
----
-
-## مجوز
-
-MIT License – آزاد برای استفاده تجاری و غیرتجاری.
+- **Position data**: API رسمی بایننس پوزیشن‌های سایر کاربران را در اختیار عموم قرار نمی‌دهد. برای production باید از منبع داده معتبر (سرویس‌های third-party یا scraper مجاز) استفاده شود.
+- سیستم فعلاً در حالت **Discovery + Storage** کار می‌کند و آماده اتصال لایه‌های بعدی است.
 
 ---
 
 **ساخته‌شده با همکاری Grok**  
-Repository: https://github.com/hamidhayatijozani/quant-smart-money-tracker
+https://github.com/hamidhayatijozani/quant-smart-money-tracker
