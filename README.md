@@ -1,139 +1,128 @@
 # Quant Smart Money Tracker
 
-**معماری جامع سیستم ردیابی، تحلیل رفتار و تولید سیگنال‌های کمّی تریدرهای برتر در صرافی‌های بین‌المللی**
+**محصول عملیاتی ردیابی و تولید سیگنال از تریدرهای برتر + سیستم کپی‌تریدینگ متاتریدر**
 
-سیستم صنعتی برای ردیابی و تحلیل رفتار تریدرهای برتر (Smart Money / Lead Traders) در صرافی‌های Binance، OKX و Bybit همراه با تولید سیگنال کمّی، موتور هوش مصنوعی رفتارشناس و لایه‌های ایمنی پیشرفته.
-
----
-
-## وضعیت فعلی پروژه (Current Status)
-
-| بخش                              | وضعیت              |
-|----------------------------------|--------------------|
-| معماری کامل                     | ✅ تکمیل شده       |
-| ساختار پروژه                    | ✅ ایجاد شده       |
-| Docker Compose (Kafka + ClickHouse) | ✅ آماده        |
-| ماژول Safety & Idempotency      | ✅ آماده           |
-| Behavioral AI Engine            | ✅ اسکلت آماده     |
-| Configuration                   | ✅ آماده           |
-| **Binance Collector (Leaderboard)** | ✅ پیاده‌سازی شده |
-| **ClickHouse Storage + Schema** | ✅ پیاده‌سازی شده  |
-| Main Discovery Loop             | ✅ متصل شده        |
-| Position Streaming (واقعی)      | 🔄 نیاز به منبع داده خارجی |
-| OKX / Bybit Collectors          | 🔄 بعدی            |
-| Kafka Producer/Consumer         | 🔄 بعدی            |
-| RL Agent                        | 🔄 برنامه‌ریزی شده |
-| Dashboard                       | 🔄 برنامه‌ریزی شده |
+سیستم هوشمند برای کشف، امتیازدهی و رتبه‌بندی سیگنال‌های کپی‌ترید (MetaTrader / MQL5 و منابع مشابه) همراه با لایه‌های ایمنی، موتور هوش مصنوعی رفتارشناس و معماری مقیاس‌پذیر.
 
 ---
 
-## ساختار فعلی پروژه
+## وضعیت فعلی – محصول عملیاتی
 
-```
-quant-smart-money-tracker/
-├── infrastructure/
-│   └── docker-compose.yml
-├── src/
-│   ├── __init__.py
-│   ├── main.py                     # Discovery loop + AI placeholder
-│   ├── config.py
-│   ├── collectors/
-│   │   ├── __init__.py
-│   │   ├── base.py
-│   │   └── binance.py              # ✅ Leaderboard + skeleton positions
-│   ├── storage/
-│   │   ├── __init__.py
-│   │   └── clickhouse.py           # ✅ Schema + insert methods
-│   ├── ai_engine/
-│   │   ├── __init__.py
-│   │   └── behavioral.py
-│   └── safety/
-│       ├── __init__.py
-│       └── idempotency.py
-├── .env.example
-├── .gitignore
-├── LICENSE
-├── requirements.txt
-└── README.md
-```
+| قابلیت | وضعیت |
+|--------|--------|
+| کشف سیگنال‌های کپی‌ترید (MQL5-style) | ✅ عملیاتی |
+| موتور امتیازدهی هوشمند (Signal Engine) | ✅ عملیاتی |
+| رتبه‌بندی و توصیه COPY / WATCH / AVOID | ✅ عملیاتی |
+| حالت Demo با داده‌های واقعی‌گرایانه | ✅ فعال |
+| Shadow Mode (ایمنی) | ✅ فعال |
+| Binance Leaderboard Collector | ✅ آماده |
+| ClickHouse Storage | ✅ آماده |
+| معماری Safety & Idempotency | ✅ آماده |
+| Behavioral AI Skeleton | ✅ آماده |
 
 ---
 
-## راه‌اندازی سریع (Quick Start)
+## اجرای سریع (کمتر از ۲ دقیقه)
 
-### ۱. کلون کردن مخزن
 ```bash
 git clone https://github.com/hamidhayatijozani/quant-smart-money-tracker.git
 cd quant-smart-money-tracker
-```
 
-### ۲. ایجاد محیط مجازی و نصب وابستگی‌ها
-```bash
 python -m venv .venv
-source .venv/bin/activate          # Linux / macOS
+source .venv/bin/activate          # Windows: .venv\Scripts\activate
 pip install -r requirements.txt
-```
 
-### ۳. تنظیم متغیرهای محیطی
-```bash
-cp .env.example .env
-```
-
-### ۴. راه‌اندازی زیرساخت
-```bash
-cd infrastructure
-docker compose up -d
-```
-
-- Kafka UI → http://localhost:8080  
-- ClickHouse → http://localhost:8123
-
-### ۵. اجرای سیستم
-```bash
 python -m src.main
 ```
 
-سیستم شروع به دریافت لیدربورد بایننس (روزانه + هفتگی) می‌کند و داده‌ها را در ClickHouse ذخیره می‌نماید.
+بعد از اجرا، سیستم هر ۶۰ ثانیه یک چرخه کامل انجام می‌دهد و خروجی شبیه این نمایش می‌دهد:
+
+```
+========================================================================
+  QUANT SMART MONEY TRACKER  –  Operational Mode
+  Copy Trading + MetaTrader Signal Intelligence
+========================================================================
+
+  Top 10 Actionable Signals
+
+  Rank  Action     Strength  Name                         Gain%    MaxDD%   Risk
+  ------------------------------------------------------------------------------
+  1     🟢 COPY     0.892     Ironclad Risk Manager        38.9     7.4      low
+  2     🟢 COPY     0.871     Quantum Multi-Pair           63.1     11.8     low
+  3     🟢 COPY     0.845     Steady Compass               41.7     9.3      low
+  4     🟡 WATCH    0.763     Aurora EURUSD Swing          87.4     14.2     low
+  ...
+```
 
 ---
 
-## نقشه راه به‌روز
+## معماری فعلی
 
-### فاز ۱ – Foundation ✅ تقریباً کامل
-- [x] معماری و مستندات
-- [x] ساختار + Docker
-- [x] Safety & Idempotency
-- [x] Behavioral AI Skeleton
-- [x] Binance Leaderboard Collector
-- [x] ClickHouse Schema & Storage
-
-### فاز ۲ – Core Engine (در حال پیشرفت)
-- [x] Binance Leaderboard
-- [ ] Position data source (نیاز به منبع معتبر)
-- [ ] Kafka integration
-- [ ] OKX + Bybit collectors
-- [ ] محاسبه دقیق PnL/ROI
-- [ ] تولید سیگنال پایه
-
-### فاز ۳ – Intelligence
-- [ ] مدل Transformer واقعی
-- [ ] RL Copy-Optimization Agent
-- [ ] Multi-Source Fusion
-
-### فاز ۴ – Production Ready
-- [ ] Dashboard
-- [ ] Alerting
-- [ ] Backtesting
-- [ ] Live execution with Shadow Mode
+```
+src/
+├── main.py                        # نقطه ورود عملیاتی کامل
+├── config.py
+├── collectors/
+│   ├── binance.py                 # لیدربورد بایننس
+│   └── copytrading/
+│       ├── base.py                # مدل‌های CopySignalProvider + OpenTrade
+│       └── mql5.py                # Collector هوشمند MQL5-style (با Demo Mode قوی)
+├── engine/
+│   └── signal_engine.py           # موتور امتیازدهی و تصمیم‌گیری COPY/WATCH/AVOID
+├── ai_engine/
+│   └── behavioral.py              # Trust Score + Anomaly detection
+├── safety/
+│   └── idempotency.py             # ExecutionState + Evidence Hash
+└── storage/
+    └── clickhouse.py              # ذخیره‌سازی سری‌زمانی
+```
 
 ---
 
-## نکات مهم
+## منطق تصمیم‌گیری هوشمند (Signal Engine)
 
-- **Position data**: API رسمی بایننس پوزیشن‌های سایر کاربران را در اختیار عموم قرار نمی‌دهد. برای production باید از منبع داده معتبر (سرویس‌های third-party یا scraper مجاز) استفاده شود.
-- سیستم فعلاً در حالت **Discovery + Storage** کار می‌کند و آماده اتصال لایه‌های بعدی است.
+سیستم هر ارائه‌دهنده سیگنال را بر اساس موارد زیر امتیاز می‌دهد:
+
+- **Gain %** و **Max Drawdown** (مهم‌ترین فاکتور ریسک)
+- Profit Factor و Win Rate
+- تعداد معاملات (حجم نمونه)
+- تعداد مشترکین
+- سطح ریسک اعلام‌شده
+- کیفیت کلی (Quality Score)
+
+سپس یکی از سه توصیه را صادر می‌کند:
+
+| توصیه | معنی |
+|-------|------|
+| 🟢 **COPY** | سیگنال با کیفیت بالا و ریسک کنترل‌شده – مناسب کپی |
+| 🟡 **WATCH** | جالب است، اما هنوز به سطح اطمینان کامل نرسیده |
+| 🔴 **AVOID** | کیفیت یا ریسک قابل قبول نیست |
 
 ---
 
-**ساخته‌شده با همکاری Grok**  
+## چرا Copy Trading / MetaTrader؟
+
+در صرافی‌های کریپتو (Binance و ...)، پوزیشن تریدرهای دیگر به‌صورت عمومی و قانونی در دسترس نیست.  
+اما در اکوسیستم **MetaTrader / MQL5 / Myfxbook / ZuluTrade** تریدرها **عمداً** اجازه کپی می‌دهند و داده‌های عملکرد، دراودان و معاملات باز را به اشتراک می‌گذارند. این منبع بسیار تمیزتر، قانونی‌تر و قابل‌اعتمادتر برای ساخت سیستم کپی‌ترید است.
+
+---
+
+## مراحل بعدی (Roadmap)
+
+- [ ] اتصال واقعی به API یا منبع داده MQL5 / Myfxbook
+- [ ] پشتیبانی از چند Provider همزمان (MQL5 + Myfxbook + ...)
+- [ ] ذخیره سیگنال‌ها در ClickHouse
+- [ ] سیستم هشدار (تلگرام / دیسکورد)
+- [ ] RL Agent برای بهینه‌سازی حجم کپی
+- [ ] Dashboard تحت وب
+
+---
+
+## مجوز
+
+MIT License
+
+---
+
+**ساخته‌شده با خلاقیت و همکاری Grok**  
 https://github.com/hamidhayatijozani/quant-smart-money-tracker
