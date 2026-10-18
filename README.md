@@ -1,8 +1,8 @@
 # Quant Smart Money Tracker
 
-**محصول عملیاتی ردیابی و تولید سیگنال از تریدرهای برتر + سیستم کپی‌تریدینگ متاتریدر**
+**محصول عملیاتی ردیابی و تولید سیگنال از تریدرهای برتر + سیستم کپی‌تریدینگ متاتریدر + وب‌اپلیکیشن**
 
-سیستم هوشمند برای کشف، امتیازدهی و رتبه‌بندی سیگنال‌های کپی‌ترید (MetaTrader / MQL5 و منابع مشابه) همراه با لایه‌های ایمنی، موتور هوش مصنوعی رفتارشناس و معماری مقیاس‌پذیر.
+سیستم هوشمند برای کشف، امتیازدهی و رتبه‌بندی سیگنال‌های کپی‌ترید (MetaTrader / MQL5) همراه با داشبورد تحت وب موبایل‌فرندلی.
 
 ---
 
@@ -13,84 +13,85 @@
 | کشف سیگنال‌های کپی‌ترید (MQL5-style) | ✅ عملیاتی |
 | موتور امتیازدهی هوشمند (Signal Engine) | ✅ عملیاتی |
 | رتبه‌بندی و توصیه COPY / WATCH / AVOID | ✅ عملیاتی |
+| **وب‌اپلیکیشن (Streamlit)** | ✅ آماده |
 | حالت Demo با داده‌های واقعی‌گرایانه | ✅ فعال |
 | Shadow Mode (ایمنی) | ✅ فعال |
 | Binance Leaderboard Collector | ✅ آماده |
 | ClickHouse Storage | ✅ آماده |
-| معماری Safety & Idempotency | ✅ آماده |
-| Behavioral AI Skeleton | ✅ آماده |
 
 ---
 
-## اجرای سریع (کمتر از ۲ دقیقه)
+## ۱. اجرای وب‌اپلیکیشن (پیشنهادی برای موبایل و کامپیوتر)
 
 ```bash
 git clone https://github.com/hamidhayatijozani/quant-smart-money-tracker.git
 cd quant-smart-money-tracker
 
 python -m venv .venv
-source .venv/bin/activate          # Windows: .venv\Scripts\activate
+source .venv/bin/activate          # ویندوز: .venv\Scripts\activate
 pip install -r requirements.txt
 
+streamlit run webapp/app.py
+```
+
+بعد از اجرا، مرورگر به صورت خودکار باز می‌شود (معمولاً روی آدرس زیر):
+
+**http://localhost:8501**
+
+### استفاده روی موبایل:
+1. مطمئن شو کامپیوتر و گوشی به یک وای‌فای متصل هستند.
+2. در کامپیوتر آدرس IP را پیدا کن (مثلاً `192.168.1.10`).
+3. در مرورگر گوشی برو به:
+   ```
+   http://192.168.1.10:8501
+   ```
+4. حالا می‌تونی از روی گوشی سیگنال‌ها را ببینی و فیلتر کنی.
+
+---
+
+## ۲. اجرای نسخه ترمینال (اختیاری)
+
+```bash
 python -m src.main
 ```
 
-بعد از اجرا، سیستم هر ۶۰ ثانیه یک چرخه کامل انجام می‌دهد و خروجی شبیه این نمایش می‌دهد:
+---
 
-```
-========================================================================
-  QUANT SMART MONEY TRACKER  –  Operational Mode
-  Copy Trading + MetaTrader Signal Intelligence
-========================================================================
+## ویژگی‌های وب‌اپلیکیشن
 
-  Top 10 Actionable Signals
-
-  Rank  Action     Strength  Name                         Gain%    MaxDD%   Risk
-  ------------------------------------------------------------------------------
-  1     🟢 COPY     0.892     Ironclad Risk Manager        38.9     7.4      low
-  2     🟢 COPY     0.871     Quantum Multi-Pair           63.1     11.8     low
-  3     🟢 COPY     0.845     Steady Compass               41.7     9.3      low
-  4     🟡 WATCH    0.763     Aurora EURUSD Swing          87.4     14.2     low
-  ...
-```
+- داشبورد زیبا و واکنش‌گرا (موبایل‌فرندلی)
+- فیلترهای زنده: حداقل سود، حداکثر دراودان، تعداد معاملات
+- نمایش متریک‌های خلاصه (تعداد COPY / WATCH / AVOID)
+- جدول رتبه‌بندی‌شده با نوار پیشرفت قدرت سیگنال
+- جزئیات کامل + دلایل امتیازدهی برای هر سیگنال
+- دکمه به‌روزرسانی دستی
 
 ---
 
 ## معماری فعلی
 
 ```
-src/
-├── main.py                        # نقطه ورود عملیاتی کامل
-├── config.py
-├── collectors/
-│   ├── binance.py                 # لیدربورد بایننس
-│   └── copytrading/
-│       ├── base.py                # مدل‌های CopySignalProvider + OpenTrade
-│       └── mql5.py                # Collector هوشمند MQL5-style (با Demo Mode قوی)
-├── engine/
-│   └── signal_engine.py           # موتور امتیازدهی و تصمیم‌گیری COPY/WATCH/AVOID
-├── ai_engine/
-│   └── behavioral.py              # Trust Score + Anomaly detection
-├── safety/
-│   └── idempotency.py             # ExecutionState + Evidence Hash
-└── storage/
-    └── clickhouse.py              # ذخیره‌سازی سری‌زمانی
+quant-smart-money-tracker/
+├── webapp/
+│   └── app.py                     # وب‌اپلیکیشن Streamlit
+├── src/
+│   ├── main.py                    # نسخه ترمینال
+│   ├── collectors/
+│   │   └── copytrading/
+│   │       ├── base.py
+│   │       └── mql5.py
+│   ├── engine/
+│   │   └── signal_engine.py
+│   ├── ai_engine/
+│   ├── safety/
+│   └── storage/
+├── requirements.txt
+└── README.md
 ```
 
 ---
 
-## منطق تصمیم‌گیری هوشمند (Signal Engine)
-
-سیستم هر ارائه‌دهنده سیگنال را بر اساس موارد زیر امتیاز می‌دهد:
-
-- **Gain %** و **Max Drawdown** (مهم‌ترین فاکتور ریسک)
-- Profit Factor و Win Rate
-- تعداد معاملات (حجم نمونه)
-- تعداد مشترکین
-- سطح ریسک اعلام‌شده
-- کیفیت کلی (Quality Score)
-
-سپس یکی از سه توصیه را صادر می‌کند:
+## منطق تصمیم‌گیری
 
 | توصیه | معنی |
 |-------|------|
@@ -100,21 +101,12 @@ src/
 
 ---
 
-## چرا Copy Trading / MetaTrader؟
+## مراحل بعدی
 
-در صرافی‌های کریپتو (Binance و ...)، پوزیشن تریدرهای دیگر به‌صورت عمومی و قانونی در دسترس نیست.  
-اما در اکوسیستم **MetaTrader / MQL5 / Myfxbook / ZuluTrade** تریدرها **عمداً** اجازه کپی می‌دهند و داده‌های عملکرد، دراودان و معاملات باز را به اشتراک می‌گذارند. این منبع بسیار تمیزتر، قانونی‌تر و قابل‌اعتمادتر برای ساخت سیستم کپی‌ترید است.
-
----
-
-## مراحل بعدی (Roadmap)
-
-- [ ] اتصال واقعی به API یا منبع داده MQL5 / Myfxbook
-- [ ] پشتیبانی از چند Provider همزمان (MQL5 + Myfxbook + ...)
-- [ ] ذخیره سیگنال‌ها در ClickHouse
-- [ ] سیستم هشدار (تلگرام / دیسکورد)
-- [ ] RL Agent برای بهینه‌سازی حجم کپی
-- [ ] Dashboard تحت وب
+- [ ] اتصال به منبع واقعی MQL5 / Myfxbook
+- [ ] هشدار تلگرام
+- [ ] استقرار روی سرور (برای دسترسی دائمی از موبایل)
+- [ ] داشبورد پیشرفته‌تر
 
 ---
 
