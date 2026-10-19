@@ -1,0 +1,23 @@
+services:
+  - type: worker
+    name: quant-smart-money-tracker-shadow
+    runtime: python
+    plan: starter
+    region: frankfurt
+    branch: ops/continuous-shadow-worker
+    buildCommand: pip install -r requirements.txt
+    startCommand: python -m src.main
+    autoDeploy: true
+    disk:
+      name: quant-signal-journal
+      mountPath: /var/data
+      sizeGB: 1
+    envVars:
+      - key: ENVIRONMENT
+        value: production
+      - key: ENABLE_SHADOW_MODE
+        value: "true"
+      - key: SIGNAL_JOURNAL_PATH
+        value: /var/data/signals.sqlite3
+      - key: LOG_LEVEL
+        value: INFO
